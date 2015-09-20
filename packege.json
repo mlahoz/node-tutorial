@@ -1,0 +1,11 @@
+{
+  "name": "myNodeApp",
+  "author": "Miguel Lahoz",
+  "description": "my test node.js application",
+  "version": "0.0.1",
+  "dependencies": {
+    "connect": "1.8.x",
+    "express": "2.5.x"
+  },
+  "main": "app.js"
+}
