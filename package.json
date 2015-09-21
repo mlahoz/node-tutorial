@@ -1,0 +1,22 @@
+{
+  "name": "node-tutorial",
+  "version": "0.0.1",
+  "description": "Node tutorial examples from the book Node for Front-End Developers",
+  "main": "app.js",
+  "scripts": {
+    "test": "node app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git@github.com:mlahoz/node-tutorial.git"
+  },
+  "keywords": [
+    "node",
+    "tutorial"
+  ],
+  "author": "Miguel Lahoz <miguel.lahoz@gmail.com>",
+  "license": "GPL-2.0",
+  "bugs": {
+    "url": "https://github.com/mlahoz/node-tutorial/issues"
+  }
+}
