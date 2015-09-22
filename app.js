@@ -1,51 +1,11 @@
-var http = require("http"),
-    // utilities for working with file paths
-    path = require("path"),
-    // utilities for accessing the file system
-    fs = require("fs"),
-    extensions = {
-        ".html": "text/html",
-        ".css": "text/css",
-        ".js": "application/javascript",
-        ".png": "image/png",
-        ".gif": "image/gif",
-        ".jpg": "image/jpeg"
-    };
+var http = require('http'),
+    finalhandler = require('finalhandler'),
+    serveStatic = require('serve-static');
 
-http.createServer(function(req, res) {
+var serve = serveStatic("./public/");
 
-    // look for a filename in the URL, default to index.html
-    var filename = path.basename(req.url) || "index.html",
-        ext = path.extname(filename),
-        dir = path.dirname(req.url).substring(1),
-        // __dirname is a built-in variable containing the path where the code is running
-        localPath = __dirname + "/public/";
+var server = http.createServer(function(req, res) {
+  serve(req, res, finalhandler(req, res));
+});
 
-    if (extensions[ext]) {
-        localPath += (dir ? dir + "/" : "") + filename;
-        fs.exists(localPath, function(exists) {
-            if (exists) {
-                getFile(localPath, extensions[ext], res);
-            } else {
-                res.writeHead(404);
-                res.end();
-            }
-        });
-    }
-
-}).listen(8000);
-
-function getFile(localPath, mimeType, res) {
-    fs.readFile(localPath, function(err, contents) {
-        if (!err) {
-            res.writeHead(200, {
-                "Content-Type": mimeType,
-                "Content-Length": contents.length
-            });
-            res.end(contents);
-        } else {
-            res.writeHead(500);
-            res.end();
-        }
-    });
-}
+server.listen(8000);
