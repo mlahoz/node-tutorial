@@ -1,11 +1,14 @@
-var http = require('http'),
-    finalhandler = require('finalhandler'),
-    serveStatic = require('serve-static');
+var http = require("http"),
+    querystring = require("querystring");
 
-var serve = serveStatic("./public/");
+http.createServer(function(req, res) {
+    // parse everything after the "?" into key/value pairs
+    var qs = querystring.parse(req.url.split("?")[1]),
+        // property names are the same as in the querystring
+        userName = qs.firstName + " " + qs.lastName,
+        html = "<!doctype html>" +
+            "<html><head><title>Hello " + userName + "</title></head>" +
+            "<body><h1>Hello, " + userName + "!</h1></body></html>";
 
-var server = http.createServer(function(req, res) {
-  serve(req, res, finalhandler(req, res));
-});
-
-server.listen(8000);
+    res.end(html);
+}).listen(8000);
