@@ -1,15 +1,23 @@
-var connect = require("connect"),
-    bodyParser = require("body-parser"),
-    serveStatic = require("serve-static"),
-    app = connect();
+var http = require("http"),
+    querystring = require("querystring");
 
-app.use(serveStatic("./public"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(function (req, res) {
-    var userName = req.body.firstName + " " + req.body.lastName,
-    html = "<!doctype html>" +
-        "<html><head><title>Hello " + userName + "</title></head>" +
-        "<body><h1>Hello, " + userName + "!</h1></body></html>";
-    res.end(html);
-})
-app.listen(8000);
+http.createServer(function(req, res) {
+    var qs = querystring.parse(req.url.split("?")[1]),
+        username = qs.firstName + " " + qs.lastName,
+        json;
+
+    if (qs.callback) {
+        // if we have a callback function name, do JSONP
+        json = qs.callback + "({username:'" + username + "'});";
+    } else {
+        // otherwise, just return JSON
+        json = JSON.stringify({"username":username});
+    }
+
+    res.writeHead(200, {
+        // change MIME type to JSON
+        "Content-Type": "application/json",
+        "Content-Length": json.length 
+    });
+    res.end(json);
+}).listen(8000);
