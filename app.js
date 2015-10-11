@@ -1,23 +1,18 @@
-var http = require("http"),
-    querystring = require("querystring");
+var connect = require("connect"),
+    // create socket.io server on port 1337
+    io = require("socket.io").listen(1337),
+    serveStatic = require("serve-static"),
+    app = connect();
 
-http.createServer(function(req, res) {
-    var qs = querystring.parse(req.url.split("?")[1]),
-        username = qs.firstName + " " + qs.lastName,
-        json;
+app.use(serveStatic("./public"));
+app.listen(8000);
 
-    if (qs.callback) {
-        // if we have a callback function name, do JSONP
-        json = qs.callback + "({username:'" + username + "'});";
-    } else {
-        // otherwise, just return JSON
-        json = JSON.stringify({"username":username});
-    }
-
-    res.writeHead(200, {
-        // change MIME type to JSON
-        "Content-Type": "application/json",
-        "Content-Length": json.length 
+// listen for connection from an individual client
+io.sockets.on("connection", function(socket) {
+    // listen for setName event
+    socket.on("setName", function(data) {
+        var userName = data.firstName + " " + data.lastName;
+        // publish nameSet event with new username
+        socket.emit("nameSet", {userName: userName});
     });
-    res.end(json);
-}).listen(8000);
+});
