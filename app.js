@@ -1,18 +1,33 @@
 var connect = require("connect"),
-    // create socket.io server on port 1337
-    io = require("socket.io").listen(1337),
+    bodyParser = require("body-parser"),
     serveStatic = require("serve-static"),
+    fs = require("fs"),
+    mustache = require("mustache"),
     app = connect();
 
 app.use(serveStatic("./public"));
-app.listen(8000);
+app.use(bodyParser.urlencoded({ extended: false }));
+app.use(function (req, res) {
+    var userName = {
+            firstName: req.body.firstName,
+            lastName: req.body.lastName
+        },
+        // create and open the stream
+        tmplFile = fs.createReadStream(
+            __dirname + "/public/edit.html",
+            {encoding: "utf8"}
+        ),
+        template = "",
+        html;
 
-// listen for connection from an individual client
-io.sockets.on("connection", function(socket) {
-    // listen for setName event
-    socket.on("setName", function(data) {
-        var userName = data.firstName + " " + data.lastName;
-        // publish nameSet event with new username
-        socket.emit("nameSet", {userName: userName});
+    tmplFile.on("data", function(data) {
+        template += data;
+    });
+
+    tmplFile.on("end", function() {
+        // render the template with the userName object as data
+        html = mustache.to_html(template, userName);
+        res.end(html);
     });
 });
+app.listen(8000);
