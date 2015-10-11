@@ -1,6 +1,7 @@
 var connect = require("connect"),
     connectRoute = require("connect-route"),
     serveStatic = require("serve-static"),
+    bodyParser = require("body-parser"),
     mustache = require("mustache"),
     requirejs = require("requirejs"),
     parentTmpl,
@@ -10,40 +11,46 @@ var connect = require("connect"),
 requirejs.config({ nodeRequire: require });
 
 app.use(serveStatic("./public"));
+app.use(bodyParser.urlencoded({ extended: false }));
 app.use(connectRoute(function(router) {
 
-    router.get("/show/:tmpl/:firstName/:lastName", function(req, res) {
-        var userName = {
-                firstName: req.params.firstName,
-                lastName: req.params.lastName
+    router.post("/theme", function(req, res) {
+        var theme = {
+                main: req.body.mainColor,
+                secondary: req.body.secondaryColor,
+                border: req.body.borderStyle,
+                corners: req.body.borderRadius
             };
 
-        // once the parent template is loaded, render the page
-        requirejs(["text!public/parent.html"], function(_parentTmpl) {
-            parentTmpl = _parentTmpl;
-            render(res, req.params.tmpl + ".html", userName);
+        // load and render the CSS template
+        requirejs(["text!public/css/theme.css"], function(tmpl) {
+            var css = mustache.to_html(tmpl, theme);
+            res.writeHead(200, {
+                "Content-Type": "text/css",
+                "Content-Length": css.length
+            });
+            res.end(css);
         });
     });
 
+    router.post("/builder", function(req, res) {
+        var options = {
+                shim: req.body.html5shim,
+                flash: req.body.useFlash,
+                sockets: req.body.useWebSockets,
+                jsonp: req.body.useJsonp
+            };
+
+        // load and render the JS template
+        requirejs(["text!public/js/builder.js"], function(tmpl) {
+            var js = mustache.to_html(tmpl, options);
+            res.writeHead(200, {
+                "Content-Type": "application/javascript",
+                "Content-Length": js.length
+            });
+            res.end(js);
+        });
+    });
 }));
 
 app.listen(8000);
-
-function render(res, filename, data, style, script, callback) {
-    // load the template and return control to another function or send the response
-    requirejs(["text!public/" + filename], function(tmpl) {
-        if (callback) {
-            callback(res, tmpl, data, style, script);
-        } else {
-            // render parent template with page template as a child
-            var html = mustache.to_html(
-                parentTmpl,
-                data,
-                {content: tmpl, stylesheets: style || "", scripts: script || ""}
-            );
-            res.end(html);
-        }
-    });
-}
-
-// test: http://127.0.0.1:8000/show/hello/Mister/Magoo
