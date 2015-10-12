@@ -1,56 +1,1 @@
-var connect = require("connect"),
-    connectRoute = require("connect-route"),
-    serveStatic = require("serve-static"),
-    bodyParser = require("body-parser"),
-    mustache = require("mustache"),
-    requirejs = require("requirejs"),
-    parentTmpl,
-    app = connect();
-
-// configure requirejs to fall back to Node's require if a module is not found
-requirejs.config({ nodeRequire: require });
-
-app.use(serveStatic("./public"));
-app.use(bodyParser.urlencoded({ extended: false }));
-app.use(connectRoute(function(router) {
-
-    router.post("/theme", function(req, res) {
-        var theme = {
-                main: req.body.mainColor,
-                secondary: req.body.secondaryColor,
-                border: req.body.borderStyle,
-                corners: req.body.borderRadius
-            };
-
-        // load and render the CSS template
-        requirejs(["text!public/css/theme.css"], function(tmpl) {
-            var css = mustache.to_html(tmpl, theme);
-            res.writeHead(200, {
-                "Content-Type": "text/css",
-                "Content-Length": css.length
-            });
-            res.end(css);
-        });
-    });
-
-    router.post("/builder", function(req, res) {
-        var options = {
-                shim: req.body.html5shim,
-                flash: req.body.useFlash,
-                sockets: req.body.useWebSockets,
-                jsonp: req.body.useJsonp
-            };
-
-        // load and render the JS template
-        requirejs(["text!public/js/builder.js"], function(tmpl) {
-            var js = mustache.to_html(tmpl, options);
-            res.writeHead(200, {
-                "Content-Type": "application/javascript",
-                "Content-Length": js.length
-            });
-            res.end(js);
-        });
-    });
-}));
-
-app.listen(8000);
+var http = require("http"),    querystring = require("querystring"),    redis = require("redis"),    // create a redis client on redis' default port    db = redis.createClient(32768, "192.168.99.100");db.set("Mister", "Magoo", function(){});http.createServer(function(req, res) {    var qs = querystring.parse(req.url.split("?")[1]),        firstName = qs.firstName;        // get the last name for the submitted first name and render        db.get(firstName, function(err, lastName) {            var userName = firstName + " " + lastName, html = "<!doctype html>" +                "<html><head><title>Hello " + userName + "</title></head>" +                "<body><h1>Hello, " + userName + "!</h1></body></html>";            res.end(html);        });}).listen(8000);
